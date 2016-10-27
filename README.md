@@ -36,3 +36,5 @@ resolveObject(resolver, [
 ```
 
 More: [examples](https://github.com/tomazy/resolve-object/blob/master/test/examples.js).
+
+License: MIT
