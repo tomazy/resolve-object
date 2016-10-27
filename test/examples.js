@@ -78,8 +78,8 @@ function messageResolver(message) {
 
 function rootResolver(api) {
   const resolver = {
-    person({ id }) {
-      return api.fetchPerson(id)
+    person(args) {
+      return api.fetchPerson(args.id)
         .then(personToResolver);
     },
 
@@ -88,8 +88,8 @@ function rootResolver(api) {
         .then(persons => persons.map(personToResolver));
     },
 
-    message({ id }) {
-      return api.fetchMessage(id)
+    message(args) {
+      return api.fetchMessage(args.id)
         .then(messageResolver);
     },
   };
