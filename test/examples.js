@@ -1,6 +1,7 @@
 'use strict';
 
-const resolveFields = require('..');
+const resolveObject = require('..');
+const example = it;
 
 const db = {
   persons: {
@@ -41,7 +42,7 @@ const db = {
       content: 'Message 4',
     },
   }
-}
+};
 
 const api = {
   fetchPerson(id) {
@@ -57,16 +58,16 @@ const api = {
   fetchMessage(id) {
     return Promise.resolve(db.messages[id]);
   },
-}
+};
 
 function personResolver(root, person) {
   return Object.assign({}, person, {
     friends() {
-      return person.friends.map(id => root.person({ id }))
+      return person.friends.map(id => root.person({ id }));
     },
 
     messages() {
-      return person.messages.map(id => root.message({ id }))
+      return person.messages.map(id => root.message({ id }));
     }
   });
 }
@@ -79,17 +80,17 @@ function rootResolver(api) {
   const resolver = {
     person({ id }) {
       return api.fetchPerson(id)
-        .then(personToResolver)
+        .then(personToResolver);
     },
 
     persons() {
       return api.fetchPersons()
-        .then(persons => persons.map(personToResolver))
+        .then(persons => persons.map(personToResolver));
     },
 
     message({ id }) {
       return api.fetchMessage(id)
-        .then(messageResolver)
+        .then(messageResolver);
     },
   };
 
@@ -100,10 +101,9 @@ function rootResolver(api) {
 
 describe('examples', () => {
   const resolver = rootResolver(api);
-  const resolve = resolveFields.bind(null, resolver);
 
-  it('persons', () => (
-    expect(resolve([{
+  example('persons', () => (
+    expect(resolveObject(resolver, [{
       name: 'persons',
       include: [
         { name: 'name' },
@@ -117,8 +117,8 @@ describe('examples', () => {
     })
   ));
 
-  it('person with friends and messages', () => (
-    expect(resolve([{
+  example('person with friends and messages', () => (
+    expect(resolveObject(resolver, [{
       name: 'person',
       args: { id: 1001 },
       include: [
@@ -127,7 +127,11 @@ describe('examples', () => {
         { name: 'friends',
           include: [
             'name',
-            'age'
+            'age',
+            {
+              name: 'friends',
+              include: [ 'name' ]
+            }
           ]
         },
         { name: 'messages',
@@ -143,9 +147,15 @@ describe('examples', () => {
         friends: [{
           age: 21,
           name: 'alice',
+          friends: [{
+            name: 'john'
+          }],
         },{
           age: 22,
-          name: 'bob'
+          name: 'bob',
+          friends: [{
+            name: 'john'
+          }],
         }],
         messages: [{
           content: 'Message 1',
@@ -156,15 +166,16 @@ describe('examples', () => {
     })
   ));
 
-  it('message', () => (
-    expect(resolve([{
+  example('message', () => (
+    expect(resolveObject(resolver, [{
       name: 'message',
       args: { id: 2003 },
-      include: [ 'content' ]
+      include: [ 'content', 'createdAt' ]
     }])).to.eventually.eql({
       message: {
+        createdAt: 1477515403936,
         content: 'Message 3',
       }
     })
   ));
-})
+});
