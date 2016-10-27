@@ -13,20 +13,18 @@ const resolver = {
   },
 };
 
-const resolveObject = require('.');
+const resolveObject = require('resolve-object');
 const assert = require('assert');
 
-resolveObject(resolver, [
-  {
-    name: 'a',
-    include: [
-      {
-        name: 'b',
-        include: [ 'c' ]
-      }
-    ]
-  }
-]).then(obj => assert.deepEqual(obj, {
+resolveObject(resolver, [{
+  name: 'a',
+  include: [
+    {
+      name: 'b',
+      include: [ 'c' ]
+    }
+  ]
+}]).then(obj => assert.deepEqual(obj, {
   a: {
     b: {
       c: 42
@@ -37,4 +35,4 @@ resolveObject(resolver, [
 
 More: [examples](https://github.com/tomazy/resolve-object/blob/master/test/examples.js).
 
-License: MIT
+License: [MIT](https://github.com/tomazy/resolve-object/blob/master/LICENSE.md)
