@@ -59,63 +59,47 @@ const api = {
   },
 }
 
-class PersonResolver {
-  constructor({ parentResolver, person }) {
-    this.parentResolver = parentResolver;
-    this.person = person;
-  }
+function personResolver(root, person) {
+  return Object.assign({}, person, {
+    friends() {
+      return person.friends.map(id => root.person({ id }))
+    },
 
-  name() {
-    return this.person.name;
-  }
-
-  age() {
-    return this.person.age;
-  }
-
-  friends() {
-    return Promise.all(this.person.friends.map(id => this.parentResolver.person({ id })))
-  }
-
-  messages() {
-    return Promise.all(this.person.messages.map(id => this.parentResolver.message({ id })))
-  }
+    messages() {
+      return person.messages.map(id => root.message({ id }))
+    }
+  });
 }
 
-class MessageResolver {
-  constructor({ parentResolver, message }) {
-    this.parentResolver = parentResolver;
-    this.message = message;
-  }
-
-  content() {
-    return this.message.content;
-  }
+function messageResolver(message) {
+  return Object.assign({}, message);
 }
 
-class RootResolver {
-  constructor({ api }) {
-    this.api = api;
-  }
+function rootResolver(api) {
+  const resolver = {
+    person({ id }) {
+      return api.fetchPerson(id)
+        .then(personToResolver)
+    },
 
-  person({ id }) {
-    return this.api.fetchPerson(id)
-      .then(person => new PersonResolver({ parentResolver: this, person }))
-  }
+    persons() {
+      return api.fetchPersons()
+        .then(persons => persons.map(personToResolver))
+    },
 
-  persons() {
-    return this.api.fetchPersons()
-      .then(persons => persons.map(person => new PersonResolver({ parentResolver: this, person })))
-  }
+    message({ id }) {
+      return api.fetchMessage(id)
+        .then(messageResolver)
+    },
+  };
 
-  message({ id }) {
-    return this.api.fetchMessage(id)
-      .then(message => new MessageResolver({ parentResolver: this, message }))
-  }
+  const personToResolver = personResolver.bind(undefined, resolver);
+
+  return resolver;
 }
 
 describe('examples', () => {
-  const resolver = new RootResolver({ api });
+  const resolver = rootResolver(api);
   const resolve = resolveFields.bind(null, resolver);
 
   it('persons', () => (
